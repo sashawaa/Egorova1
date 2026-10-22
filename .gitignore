@@ -1,16 +1,12 @@
-# База данных и временные файлы
-db/variant.db
-db/load.sql
-
-# Node.js
-node_modules/
-npm-debug.log
-
-# Системные файлы
-Thumbs.db
+# OS/editor
 .DS_Store
-desktop.ini
+Thumbs.db
+.vscode/
+.idea/
 
-# Временные файлы редакторов
+# Build/cache
+__pycache__/
+*.pyc
+
+# Temporary logs (keep the provided sample data/log.txt tracked)
 *.tmp
-*~
