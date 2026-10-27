@@ -1,0 +1,5 @@
+ 
+db/variant.db 
+nodered/flows_cred.json 
+tools/ 
+*.log 
