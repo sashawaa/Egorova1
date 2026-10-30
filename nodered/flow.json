@@ -1,46 +1,149 @@
-const T = 3;           // период опроса, с 
-const RANGES = { s1: [0, 80], s2: [2, 400], s3: [0, 1] };
-
-const text = String(msg.payload).replace(/^\uFEFF/, '');
-const sql = [];
-
-text.split(/\r?\n/).forEach(raw => {
-    const line = raw.trim();
-    if (!line) return;
-
-    // строка вида DATA n=3 s1=2.40: делим по пробелам, затем по знаку = 
-    const parts = line.split(' ');
-    const kind = parts[0];                       // DATA или EVENT 
-    const f = {};
-    parts.slice(1).forEach(p => {
-        const kv = p.split('=');
-        f[kv[0]] = kv[1];
-    });
-
-    const n = parseInt(f.n);
-    if (isNaN(n)) return;
-    const t = n * T;
-
-    if (kind === 'DATA') {
-        ['s1', 's2', 's3'].forEach(s => {
-            const v = parseFloat(f[s]);
-            if (!isNaN(v)) {
-                sql.push(`INSERT INTO readings(n,t_s,sensor,value) 
-VALUES(${n},${t},'${s}',${v});`);
+[
+    {
+        "id": "fd9618eed274fac1",
+        "type": "inject",
+        "z": "7ee144c4ad7e1761",
+        "name": "Загрузить лог вручную",
+        "props": [
+            {
+                "p": "payload"
             }
-            if (isNaN(v) || v < RANGES[s][0] || v > RANGES[s][1]) {
-                sql.push(`INSERT INTO events(n,t_s,type,message) VALUES(${n},${t},'FAULT','датчик 
-${s} вне диапазона');`);
-            }
-        });
-    } else if (kind === 'EVENT') {
-        sql.push(`INSERT INTO events(n,t_s,type,message) VALUES(${n},${t},'${f.type}','');`);
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "x": 160,
+        "y": 380,
+        "wires": [
+            [
+                "19ae5cdfe309aaef"
+            ]
+        ]
+    },
+    {
+        "id": "744823b4272df7b4",
+        "type": "watch",
+        "z": "7ee144c4ad7e1761",
+        "name": "Следить за data/log.txt",
+        "files": "data/log.txt",
+        "recursive": false,
+        "x": 160,
+        "y": 460,
+        "wires": [
+            [
+                "19ae5cdfe309aaef"
+            ]
+        ]
+    },
+    {
+        "id": "19ae5cdfe309aaef",
+        "type": "file in",
+        "z": "7ee144c4ad7e1761",
+        "name": "Читать data/log.txt",
+        "filename": "data/log.txt",
+        "format": "utf8",
+        "chunk": false,
+        "sendError": false,
+        "encoding": "none",
+        "x": 390,
+        "y": 400,
+        "wires": [
+            [
+                "3fc55ad678fc99a3"
+            ]
+        ]
+    },
+    {
+        "id": "3fc55ad678fc99a3",
+        "type": "function",
+        "z": "7ee144c4ad7e1761",
+        "name": "Разбор лога",
+        "func": "const T = 3;\nconst RANGES = { s1: [0, 80], s2: [2, 400], s3: [0, 1] };\nconst text = String(msg.payload).replace(/^\\uFEFF/, '');\nconst sql = [];\n\ntext.split(/\\r?\\n/).forEach(raw => {\n    const line = raw.trim();\n    if (!line) return;\n    const parts = line.split(' ');\n    const kind = parts[0];\n    const f = {};\n    parts.slice(1).forEach(p => {\n        const kv = p.split('=');\n        if (kv.length === 2) f[kv[0]] = kv[1];\n    });\n    const n = parseInt(f.n);\n    if (isNaN(n)) return;\n    const t = n * T;\n    if (kind === 'DATA') {\n        ['s1', 's2', 's3'].forEach(s => {\n            const v = parseFloat(f[s]);\n            if (!isNaN(v)) {\n                sql.push(`INSERT INTO readings(n,t_s,sensor,value) VALUES(${n},${t},'${s}',${v});`);\n            }\n            if (isNaN(v) || v < RANGES[s][0] || v > RANGES[s][1]) {\n                sql.push(`INSERT INTO events(n,t_s,type,message) VALUES(${n},${t},'FAULT','датчик ${s} вне диапазона');`);\n            }\n        });\n    } else if (kind === 'EVENT') {\n        sql.push(`INSERT INTO events(n,t_s,type,message) VALUES(${n},${t},'${f.type}','');`);\n    }\n});\n\nconst toSqlite = sql.length > 0 ? sql.map(s => ({ payload: s })) : null;\nconst head = 'BEGIN;\\nDELETE FROM readings;\\nDELETE FROM events;\\nDELETE FROM sqlite_sequence WHERE name IN (\\'readings\\',\\'events\\');\\n';\nconst toFile = { payload: head + sql.join('\\n') + '\\nCOMMIT;\\n' };\n\nreturn [toSqlite, toFile];",
+        "outputs": 2,
+        "timeout": "",
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 590,
+        "y": 400,
+        "wires": [
+            [],
+            [
+                "ef05c5a8367a0d96"
+            ]
+        ]
+    },
+    {
+        "id": "ef05c5a8367a0d96",
+        "type": "file",
+        "z": "7ee144c4ad7e1761",
+        "name": "Записать db/load.sql",
+        "filename": "db/load.sql",
+        "filenameType": "str",
+        "appendNewline": false,
+        "createDir": true,
+        "overwriteFile": "true",
+        "encoding": "none",
+        "x": 800,
+        "y": 400,
+        "wires": [
+            [
+                "0e5b2433cc5c5de2"
+            ]
+        ]
+    },
+    {
+        "id": "0e5b2433cc5c5de2",
+        "type": "exec",
+        "z": "7ee144c4ad7e1761",
+        "command": "sqlite3 db/variant.db \".read db/schema.sql\" \".read db/load.sql\"",
+        "addpay": false,
+        "append": "",
+        "useSpawn": "false",
+        "timer": "",
+        "oldrc": false,
+        "name": "Загрузить в базу",
+        "x": 1000,
+        "y": 400,
+        "wires": [
+            [
+                "0fdf2b2857b8af8b"
+            ],
+            [
+                "d5963a3aee350aeb"
+            ],
+            []
+        ]
+    },
+    {
+        "id": "0fdf2b2857b8af8b",
+        "type": "debug",
+        "z": "7ee144c4ad7e1761",
+        "name": "Ответ sqlite3",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "payload",
+        "targetType": "msg",
+        "x": 1190,
+        "y": 360,
+        "wires": []
+    },
+    {
+        "id": "d5963a3aee350aeb",
+        "type": "debug",
+        "z": "7ee144c4ad7e1761",
+        "name": "Ошибки sqlite3",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "payload",
+        "targetType": "msg",
+        "x": 1200,
+        "y": 440,
+        "wires": []
     }
-});
-// выход 1: по одной команде 
-const toSqlite = sql.map(s => ({ topic: s.slice(0, -1) }));
-// выход 2: один файл load.sql
-const head = 'BEGIN;\nDELETE FROM readings;\nDELETE FROM events;\n' +
-    "DELETE FROM sqlite_sequence WHERE name IN ('readings','events');\n";
-const toFile = { payload: head + sql.join('\n') + '\nCOMMIT;\n' };
-return [toSqlite, toFile];
+]

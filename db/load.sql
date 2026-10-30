@@ -49,4 +49,8 @@ INSERT INTO readings(n,t_s,sensor,value) VALUES(13,39,'s3',0);
 INSERT INTO readings(n,t_s,sensor,value) VALUES(14,42,'s1',56.9);
 INSERT INTO readings(n,t_s,sensor,value) VALUES(14,42,'s2',398);
 INSERT INTO readings(n,t_s,sensor,value) VALUES(14,42,'s3',0);
+INSERT INTO readings(n,t_s,sensor,value) VALUES(15,45,'s1',95);
+INSERT INTO events(n,t_s,type,message) VALUES(15,45,'FAULT','датчик s1 вне диапазона');
+INSERT INTO readings(n,t_s,sensor,value) VALUES(15,45,'s2',50);
+INSERT INTO readings(n,t_s,sensor,value) VALUES(15,45,'s3',0);
 COMMIT;
