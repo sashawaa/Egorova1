@@ -31,9 +31,6 @@ egorova/
 ├── env.bat                
 ├── .gitignore
 │
-├── sim/                   
-│   └── diagram.json
-│
 ├── firmware/              
 │   └── variant_7.ino
 │
