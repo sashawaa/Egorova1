@@ -25,7 +25,8 @@
 
 ```
 egorova/
-├── README.md              
+├── README.md
+├── Архив_проекта.rar           
 ├── start-nodered.bat      
 ├── env.bat                
 ├── .gitignore
@@ -38,12 +39,14 @@ egorova/
 │
 ├── db/                    
 │   ├── schema.sql         
-│   ├── queries.sql        
-│   ├── variant.db         
+│   ├── queries.sql          
 │   └── load.sql           
 │
 ├── nodered/               
 │   └── flow.json
+├               
+├── sim/               
+│   └── diagram.json
 │
 ├── data/                  
 │   ├── log.txt
@@ -57,6 +60,7 @@ egorova/
     ├── bom.csv            
     ├── пояснительная_записка.pdf
     └── инструкция_пользователя.pdf
+    └── инструкция_пользователя.docs
 ```
 
 ## Требования
